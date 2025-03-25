@@ -26,7 +26,7 @@
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
 
-import mdp, util
+import mdp, util, pprint
 
 from learningAgents import ValueEstimationAgent
 import collections
@@ -70,7 +70,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         else:
             for state in self.mdp.getStates():
                 possibleVals = map((lambda act: (self.computeQValueFromValues(act),act)), self.mdp.getPossibleActions())
-                print(possibleVals)
+                print("possibleVals: {possibleVals}")
         
     def getValue(self, state):
         """
@@ -86,20 +86,33 @@ class ValueIterationAgent(ValueEstimationAgent):
         mdp = self.mdp
         s = state
         a = action
-        if(self.mdp.isTerminal(state)):
-            print("MDP is terminal, maybe deal with it or smth")
-            return self.getValue(state)
-        else:
-            statesAndProbs = self.mdp.getTransitionStatesAndProbs(s,a)
+        statesAndProbs = mdp.getTransitionStatesAndProbs(s,a)
+        print(f"Possible Actions:{mdp.getPossibleActions(state)}")
+        for state, prob in statesAndProbs:
             print(f"Transistion States and Probabilities: {statesAndProbs}")
-            sum = 0
-            maxQ = 0
+            if(mdp.isTerminal(state)):
+                print("MDP is terminal, maybe deal with it or smth")
+                #print(f"Possible Actions:{mdp.getPossibleActions(state)}")
+                self.values[s] = mdp.getReward(state, a, state)
+            else:
+                maxQ = 0
+ 
+                for newState, prob in statesAndProbs:
+                    if self.values[newState] > maxQ:
+                        maxQ = self.values[newState]
+                    self.values[s] += prob * (mdp.getReward(state, action, newState) + self.discount * maxQ)
+                print(f"self.values[{s}]: {self.values[s]}")
 
-            for newState, prob in statesAndProbs:
-                if self.values[newState] > maxQ:
-                    maxQ = self.values[newState]
-                self.values[s] += mdp.getReward(state, action, newState) + self.discount * maxQ
-            print(f"self.values[{s}]: {self.values[s]}")
+        # if(mdp.isTerminal(state)):
+        #     print("MDP is terminal, maybe deal with it or smth")
+        #    
+        #     self.values[s] = mdp.getReward(state, a, state)
+        # else:
+        #     statesAndProbs = mdp.getTransitionStatesAndProbs(s,a)
+        #     
+        #     maxQ = 0
+
+
         
 
     def computeActionFromValues(self, state):
@@ -111,7 +124,10 @@ class ValueIterationAgent(ValueEstimationAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return None.
         """
-        return None
+        # TODO deal with ties
+        possibleActions = self.mdp.getPossibleActions(state)
+        actionsAndProbs = self.mdp.getTransitionStatesAndProbs
+        return max()
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
