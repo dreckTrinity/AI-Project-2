@@ -83,21 +83,24 @@ class ValueIterationAgent(ValueEstimationAgent):
           Compute the Q-value of action in state from the
           value function stored in self.values.
         """
+        mdp = self.mdp
         s = state
         a = action
         if(self.mdp.isTerminal(state)):
             print("MDP is terminal, maybe deal with it or smth")
             return self.getValue(state)
         else:
-            statesAndProbs = self.mdp.getTransitionStatesAndProbs(state,action)
-            print(statesAndProbs)
+            statesAndProbs = self.mdp.getTransitionStatesAndProbs(s,a)
+            print(f"Transistion States and Probabilities: {statesAndProbs}")
             sum = 0
-            for stateAndProb in statesAndProbs:
-                NewState = stateAndProb[0]
-                prob = stateAndProb[1]
+            maxQ = 0
 
-                sum += prob()
-
+            for newState, prob in statesAndProbs:
+                if self.values[newState] > maxQ:
+                    maxQ = self.values[newState]
+                self.values[s] += mdp.getReward(state, action, newState) + self.discount * maxQ
+            print(f"self.values[{s}]: {self.values[s]}")
+        
 
     def computeActionFromValues(self, state):
         """
@@ -108,7 +111,7 @@ class ValueIterationAgent(ValueEstimationAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return None.
         """
-        return 0
+        return None
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
