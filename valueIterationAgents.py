@@ -95,13 +95,13 @@ class ValueIterationAgent(ValueEstimationAgent):
                 #print(f"Possible Actions:{mdp.getPossibleActions(state)}")
                 self.values[s] = mdp.getReward(state, a, state)
             else:
-                maxQ = 0
- 
+                destinationValue = 0
                 for newState, prob in statesAndProbs:
-                    if self.values[newState] > maxQ:
-                        maxQ = self.values[newState]
-                    self.values[s] += prob * (mdp.getReward(state, action, newState) + self.discount * maxQ)
+                    destinationValue = self.values[newState]
+                    self.values[s] += prob * (mdp.getReward(state, action, newState) + self.discount * destinationValue)
                 print(f"self.values[{s}]: {self.values[s]}")
+        
+        return self.values[s]
 
         # if(mdp.isTerminal(state)):
         #     print("MDP is terminal, maybe deal with it or smth")
@@ -113,7 +113,24 @@ class ValueIterationAgent(ValueEstimationAgent):
         #     maxQ = 0
 
 
+    def getActionValue(self,state,action):
+        mdp = self.mdp
+        s = state
+        a = action
+        actionValue = 0
+
+        statesAndProbs = mdp.getTransitionStatesAndProbs(s,a)
+        for state, prob in statesAndProbs:
+            if(mdp.isTerminal(state)):
+                actionValue = mdp.getReward(state, a, state)
+            else:
+                destinationValue = 0
+                for newState, prob in statesAndProbs:
+                    destinationValue = self.values[newState]
+                    actionValue += prob * (mdp.getReward(state, action, newState) + self.discount * destinationValue)
         
+        return actionValue
+
 
     def computeActionFromValues(self, state):
         """
@@ -126,8 +143,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
         # TODO deal with ties
         possibleActions = self.mdp.getPossibleActions(state)
-        actionsAndProbs = self.mdp.getTransitionStatesAndProbs
-        return max()
+        return max(lambda act: (self.getActionValue(act),act), possibleActions)
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
