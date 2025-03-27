@@ -75,7 +75,7 @@ class ValueIterationAgent(ValueEstimationAgent):
             print("On Iteration 0-----------------------")
             for state in self.mdp.getStates():
                 print(f"State: {state} | Possible Actions: {self.mdp.getPossibleActions(state)}")
-                possibleActions = self.mdp.getPossibleActions(state)
+                # possibleActions = self.mdp.getPossibleActions(state)
                 reward = 0
                 # if (('exit',) == possibleActions):
                 #     reward = self.mdp.getReward(state, 'exit', 'TERMINAL_STATE')
@@ -136,16 +136,14 @@ class ValueIterationAgent(ValueEstimationAgent):
         actionValue = 0
 
         statesAndProbs = mdp.getTransitionStatesAndProbs(s,a)
-        for state, prob in statesAndProbs:
-            if(mdp.isTerminal(state)):
-                actionValue = self.values[state]
-            else:
-                destinationValue = 0
-                for newState, prob in statesAndProbs:
-                    destinationValue = self.values[newState]
-                    actionValue += prob * (mdp.getReward(state, action, newState) + self.discount * destinationValue)
-        
-
+        if(mdp.isTerminal(s)):
+            actionValue = self.values[s]
+        else:
+            destinationValue = 0
+            for newState, prob in statesAndProbs:
+                destinationValue = self.values[newState]
+                if(s != newState):
+                    actionValue += prob * (mdp.getReward(s, a, newState) + self.discount * destinationValue)
         return actionValue
 
 
@@ -162,16 +160,17 @@ class ValueIterationAgent(ValueEstimationAgent):
         print(f"In computeAction for state: {state} ------------------------------------------")
         possibleActions = self.mdp.getPossibleActions(state)
         print(possibleActions)
-        savedAct = ""
+        savedAct = None
         savedVal = 0
-        for act in possibleActions:
-            val = self.values[state]
-            print(f"Value: {val}")
-            if val > savedVal:
-                print('WEE WOO WEE WOO THIS IS BAD')
-                savedAct = act
-                savedVal = val
-        return savedAct if possibleActions != () else None
+        if(self.iterations != 0):
+            for act in possibleActions:
+                val = self.getActionValue(state, act) #Currently takes the value of the state, updates to north or none
+                print(f"Value: {val}")
+                if val > savedVal:
+                    print('WEE WOO WEE WOO THIS IS BAD')
+                    savedAct = act
+                    savedVal = val
+        return savedAct
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
