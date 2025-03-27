@@ -164,7 +164,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         savedVal = 0
         if(self.iterations != 0):
             for act in possibleActions:
-                val = self.getActionValue(state, act) #Currently takes the value of the state, updates to north or none
+                val = self.getActionValue(state, act)
                 print(f"Value: {val}")
                 if val > savedVal:
                     print('WEE WOO WEE WOO THIS IS BAD')
