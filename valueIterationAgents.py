@@ -60,32 +60,19 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.runValueIteration()
 
     def runValueIteration(self):
-        """
-          Run the value iteration algorithm. Note that in standard
-          value iteration, V_k+1(...) depends on V_k(...)'s.
-        """
-        for state in self.mdp.getStates():
-            print(f"State: {state}--------------------------------------------------------------------")
-            possActions = self.mdp.getPossibleActions(state)
-            print(f"Possible Actions for {state}: {possActions}")
-            for action in possActions:
-                print(f"Possible Values and Probs for {action}: {self.mdp.getTransitionStatesAndProbs(state,action)}")
-
-        if(self.iterations == 0):
-            print("On Iteration 0-----------------------")
+        for _ in range(self.iterations):
+            new_values = self.values.copy()
             for state in self.mdp.getStates():
-                print(f"State: {state} | Possible Actions: {self.mdp.getPossibleActions(state)}")
-                # possibleActions = self.mdp.getPossibleActions(state)
-                reward = 0
-                # if (('exit',) == possibleActions):
-                #     reward = self.mdp.getReward(state, 'exit', 'TERMINAL_STATE')
-                self.values[state] =  reward
-                print(self.values[state])
-        else:
-            print("On iteration 1+=====================")
-            for state in self.mdp.getStates():
-                possibleVals = (map((lambda act: (self.computeQValueFromValues(state,act),act)), self.mdp.getPossibleActions(state)))
-                print(f"possibleVals: {list(possibleVals)}")
+                if self.mdp.isTerminal(state):
+                    new_values[state] = 0
+                else:
+                    action_values = [self.computeQValueFromValues(state, action) for action in self.mdp.getPossibleActions(state)]
+                    if action_values:
+                        new_values[state] = max(action_values)
+            self.values = new_values
+                
+        # epsilon: "0.5"
+        # learningRate: "0.1"
         
     def getValue(self, state):
         """
@@ -94,30 +81,11 @@ class ValueIterationAgent(ValueEstimationAgent):
         return self.values[state]
 
     def computeQValueFromValues(self, state, action):
-        """
-          Compute the Q-value of action in state from the
-          value function stored in self.values.
-        """
-        mdp = self.mdp
-        s = state
-        a = action
-        actionValue = 0
-        statesAndProbs = mdp.getTransitionStatesAndProbs(s,a)
-        #for state, prob in statesAndProbs:
-        if(mdp.isTerminal(s)):
-            actionValue = None
-        else:
-            destinationValue = 0
-            for newState, prob in statesAndProbs:
-                destinationValue = self.values[newState]
-                print(f"New State: {newState} | Probability: {prob}")
-                print(f"State: {s}  Action: {a} | {mdp.getReward(s,a,newState)}")
-                print(f"Discount Rate: {self.discount} | Destination Reward: {destinationValue}")
-                actionValue += (mdp.getReward(s, a, newState) + self.discount * destinationValue) * prob
-        print(f"actionValue: {actionValue}")
-        print(f"Self.value: {self.values[s]}")
-        self.values[s] = actionValue
-        return actionValue
+        q_value = 0
+        for next_state, prob in self.mdp.getTransitionStatesAndProbs(state, action):
+            reward = self.mdp.getReward(state, action, next_state)
+            q_value += prob * (reward + self.discount * self.values[next_state])
+        return q_value
 
         # if(mdp.isTerminal(state)):
         #     print("MDP is terminal, maybe deal with it or smth")
@@ -148,29 +116,16 @@ class ValueIterationAgent(ValueEstimationAgent):
 
 
     def computeActionFromValues(self, state):
-        """
-          The policy is the best action in the given state
-          according to the values currently stored in self.values.
-
-          You may break ties any way you see fit.  Note that if
-          there are no legal actions, which is the case at the
-          terminal state, you should return None.
-        """
-        # TODO deal with ties
-        print(f"In computeAction for state: {state} ------------------------------------------")
-        possibleActions = self.mdp.getPossibleActions(state)
-        print(possibleActions)
-        savedAct = None
-        savedVal = 0
-        if(self.iterations != 0):
-            for act in possibleActions:
-                val = self.getActionValue(state, act)
-                print(f"Value: {val}")
-                if val > savedVal:
-                    print('WEE WOO WEE WOO THIS IS BAD')
-                    savedAct = act
-                    savedVal = val
-        return savedAct
+        if self.mdp.isTerminal(state):
+            return None
+        best_action = None
+        best_value = float('-inf')
+        for action in self.mdp.getPossibleActions(state):
+            q_value = self.computeQValueFromValues(state, action)
+            if q_value > best_value:
+                best_value = q_value
+                best_action = action
+        return best_action
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
