@@ -121,7 +121,7 @@ class PacmanQAgent(QLearningAgent):
 
     def __init__(self, epsilon=0.05,gamma=0.8,alpha=0.2, numTraining=0, **args):
         """
-        These default parameters can be changed from the pacman.py command line.
+         These default parameters can be changed from the pacman.py command line.
         For example, to change the exploration rate, try:
             python pacman.py -p PacmanQLearningAgent -a epsilon=0.1
         alpha    - learning rate
@@ -167,14 +167,27 @@ class ApproximateQAgent(PacmanQAgent):
           where * is the dotProduct operator
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        weights = self.getWeights(state)
+        print(f"Weight:{weights}")
 
+        featureVector = self.featExtractor.getFeatures(state,action)
+        print(f"FeatureVector: {featureVector}")
+        
+        return np.dot(weights,featureVector)
+
+
+    
     def update(self, state, action, nextState, reward: float):
         """
            Should update your weights based on transition
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #if not self.getAction(nextState):
+        #futureWeight = 0
+        #else:
+          #futureWeight = self.computeValueFromQValues(nextState)
+        #self.weights = (1 - self.alpha) * self.getQValue(state, action) + (self.alpha * (reward + self.discount * futureWeight))
+        #state = nextState
 
     def final(self, state):
         """Called at the end of each game."""
@@ -185,4 +198,6 @@ class ApproximateQAgent(PacmanQAgent):
         if self.episodesSoFar == self.numTraining:
             # you might want to print your weights here for debugging
             "*** YOUR CODE HERE ***"
-            pass
+            #weight = self.getWeights(state)
+            #print(f"Weight: {weight}")
+            #return weight
