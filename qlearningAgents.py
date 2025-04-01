@@ -1,3 +1,17 @@
+# qlearningAgents.py
+# ------------------
+# Licensing Information:  You are free to use or extend these projects for
+# educational purposes provided that (1) you do not distribute or publish
+# solutions, (2) you retain this notice, and (3) you provide clear
+# attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
+#
+# Attribution Information: The Pacman AI projects were developed at UC Berkeley.
+# The core projects and autograders were primarily created by John DeNero
+# (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
+# Student side autograding was added by Brad Miller, Nick Hay, and
+# Pieter Abbeel (pabbeel@cs.berkeley.edu).
+
+
 from game import *
 from learningAgents import ReinforcementAgent
 from featureExtractors import *
@@ -91,10 +105,11 @@ class QLearningAgent(ReinforcementAgent):
         """
         # Pick Action
         legalActions = self.getLegalActions(state)
+        #print(f"Legal Actions: {legalActions}")
         if (util.flipCoin(self.epsilon) == True):
-          return self.computeActionFromQValues(state)
-        else:
           return random.choice(legalActions)
+        else:
+          return self.computeActionFromQValues(state)
           
 
     def update(self, state, action, nextState, reward: float):
@@ -121,7 +136,7 @@ class PacmanQAgent(QLearningAgent):
 
     def __init__(self, epsilon=0.05,gamma=0.8,alpha=0.2, numTraining=0, **args):
         """
-         These default parameters can be changed from the pacman.py command line.
+        These default parameters can be changed from the pacman.py command line.
         For example, to change the exploration rate, try:
             python pacman.py -p PacmanQLearningAgent -a epsilon=0.1
         alpha    - learning rate
@@ -160,19 +175,15 @@ class ApproximateQAgent(PacmanQAgent):
 
     def getWeights(self):
         return self.weights
-
+    
     def getQValue(self, state, action):
         """
           Should return Q(state,action) = w * featureVector
           where * is the dotProduct operator
         """
         "*** YOUR CODE HERE ***"
-        weights = self.getWeights(state)
-        print(f"Weight:{weights}")
-
+        weights = self.getWeights()
         featureVector = self.featExtractor.getFeatures(state,action)
-        print(f"FeatureVector: {featureVector}")
-        
         return np.dot(weights,featureVector)
 
 
@@ -181,13 +192,25 @@ class ApproximateQAgent(PacmanQAgent):
         """
            Should update your weights based on transition
         """
-        "*** YOUR CODE HERE ***"
-        #if not self.getAction(nextState):
-        #futureWeight = 0
-        #else:
-          #futureWeight = self.computeValueFromQValues(nextState)
-        #self.weights = (1 - self.alpha) * self.getQValue(state, action) + (self.alpha * (reward + self.discount * futureWeight))
-        #state = nextState
+        if not self.getLegalActions(nextState):
+          futureQ = 0  # No legal actions in nextState, future Q-value is 0
+        else:
+           futureQ = self.computeValueFromQValues(nextState)  # The best future Q-value
+
+        # Calculate the current Q-value
+        currentQ = self.getQValue(state, action)
+
+        # Update the weight vector based on the difference between the target and the current Q-value
+        # Target is: reward + discount * futureQ
+        correction = reward + self.discount * futureQ - currentQ
+
+        # Get the features for the state-action pair
+        features = self.featExtractor.getFeatures(state, action)
+
+        # Update weights
+        for feature in features:
+          self.weights[feature] += self.alpha * correction * features[feature]
+
 
     def final(self, state):
         """Called at the end of each game."""
@@ -198,6 +221,6 @@ class ApproximateQAgent(PacmanQAgent):
         if self.episodesSoFar == self.numTraining:
             # you might want to print your weights here for debugging
             "*** YOUR CODE HERE ***"
-            #weight = self.getWeights(state)
-            #print(f"Weight: {weight}")
-            #return weight
+
+            for feature, weight in self.weights.items():
+              print(f"Feature: {feature}, Weight: {weight}")

@@ -24,9 +24,7 @@ class FeatureExtractor:
           Usually, the count will just be 1.0 for
           indicator functions.
         """
-        feats = util.Counter()
-        feats[(state,action)] = 1.0
-        return feats
+        util.raiseNotDefined()
 
 class IdentityExtractor(FeatureExtractor):
     def getFeatures(self, state, action):
